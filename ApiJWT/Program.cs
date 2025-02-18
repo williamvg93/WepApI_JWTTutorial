@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
 /* builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); */
 
@@ -41,6 +42,15 @@ builder.Services.AddAuthentication(conf => {
     };
 });
 
+builder.Services.AddCors(opt => {
+    opt.AddPolicy("GeneralPolicy", app => {
+        app
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -55,10 +65,22 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Habilitar los Cors Configurados
+app.UseCors("GeneralPolicy");
+
 app.UseHttpsRedirection();
 
+app.MapControllers();
+
 // Para que funcione la authenticacion con JWT
+// Sin app.UseAuthentication();, el usuario nunca se autenticaría y el [Authorize] no funcionaría.
+// verifica si la solicitud HTTP entrante incluye credenciales de autenticación válidas (como un token JWT, una cookie de autenticación, etc.).
 app.UseAuthentication();
+
+// Sin app.UseAuthorization();, aunque el usuario esté autenticado, no se aplicaría ninguna restricción de acceso.
+// verifica si el usuario autenticado tiene los permisos necesarios para acceder a un recurso
+app.UseAuthorization();
+
 
 app.Run();
 
